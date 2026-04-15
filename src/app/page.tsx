@@ -16,7 +16,9 @@ import {
   Eye,
   CheckCircle2,
 } from "lucide-react";
-import { leaderboardData } from "@/lib/mock-data";
+import { leaderboardData, categories } from "@/lib/mock-data";
+
+const featuredCategories = categories.slice(0, 12);
 
 export default function Home() {
   const topFive = leaderboardData.slice(0, 5);
@@ -56,7 +58,7 @@ export default function Home() {
               who earns the most to who gives the most.
             </p>
 
-            <div className="mx-auto mt-10 max-w-md" id="waitlist">
+            <div className="mx-auto mt-10 max-w-md scroll-mt-28" id="waitlist">
               <WaitlistForm />
               <p className="mt-3 text-xs text-cyan-500">
                 Join 200+ founders on the waitlist. Free under $1K MRR.
@@ -64,8 +66,18 @@ export default function Home() {
             </div>
           </div>
 
+          {/* MRG Education Bridge */}
+          <div className="mt-14 text-center">
+            <p className="font-heading text-lg font-semibold text-cyan-800">
+              From MRR to MRG
+            </p>
+            <p className="mt-1 text-sm text-cyan-600">
+              Monthly Recurring Giving — verified, public, competitive.
+            </p>
+          </div>
+
           {/* Badge showcase */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             <BadgePreview
               percentage={15}
               companyName="Pixel Forge"
@@ -75,8 +87,146 @@ export default function Home() {
               percentage={10}
               companyName="Shipfast Labs"
               is10PctClub
+              variant="embed"
+              categoryLabel="Developer Tools"
+              categoryRank={1}
             />
             <BadgePreview percentage={5} companyName="Nomad Tools" />
+          </div>
+        </div>
+      </section>
+
+      {/* Leaderboard Preview — Section 2 */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="text-center">
+            <h2 className="font-heading text-3xl font-bold text-cyan-950 sm:text-4xl">
+              The Giving Leaderboard
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-cyan-700">
+              Ranked by verified giving percentage. The great equalizer.
+            </p>
+          </div>
+
+          {/* Category pills */}
+          <div className="mt-8 flex items-center justify-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <Link
+              href="/leaderboard"
+              className="shrink-0 rounded-full bg-cyan-600 px-4 py-1.5 text-xs font-medium text-white transition-colors cursor-pointer"
+            >
+              All
+            </Link>
+            {categories.slice(0, 8).map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/categories/${cat.slug}`}
+                className="shrink-0 rounded-full border border-cyan-200 bg-white px-4 py-1.5 text-xs font-medium text-cyan-700 transition-colors hover:bg-cyan-50 cursor-pointer"
+              >
+                {cat.label}
+              </Link>
+            ))}
+            <Link
+              href="/categories"
+              className="shrink-0 rounded-full border border-cyan-200 bg-white px-4 py-1.5 text-xs font-medium text-cyan-600 transition-colors hover:bg-cyan-50 cursor-pointer"
+            >
+              More →
+            </Link>
+          </div>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-cyan-200 bg-white/80 backdrop-blur-sm shadow-sm">
+            <div className="grid grid-cols-[3rem_1fr_5rem_6rem] gap-x-4 border-b border-cyan-100 bg-cyan-50/60 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-cyan-600 sm:grid-cols-[3rem_1fr_6rem_7rem_7rem]">
+              <span>#</span>
+              <span>Company</span>
+              <span className="text-right">MRG %</span>
+              <span className="hidden text-right sm:block">Given/mo</span>
+              <span className="text-right">Status</span>
+            </div>
+            {topFive.map((entry) => (
+              <div
+                key={entry.rank}
+                className="grid grid-cols-[3rem_1fr_5rem_6rem] items-center gap-x-4 border-b border-cyan-50 px-6 py-4 transition-colors duration-150 hover:bg-cyan-50/40 sm:grid-cols-[3rem_1fr_6rem_7rem_7rem]"
+              >
+                <span
+                  className={`font-heading text-lg font-bold ${
+                    entry.rank <= 3 ? "text-orange-500" : "text-cyan-400"
+                  }`}
+                >
+                  {entry.rank}
+                </span>
+                <span className="truncate font-medium text-cyan-900">
+                  {entry.company}
+                </span>
+                <span className="text-right font-heading font-bold text-cyan-900">
+                  {entry.givingPct}%
+                </span>
+                <span className="hidden text-right text-sm text-cyan-600 sm:block">
+                  ${(entry.amountCents / 100).toLocaleString()}
+                </span>
+                <div className="flex justify-end">
+                  {entry.is10PctClub ? (
+                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200">
+                      10% Club
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="secondary"
+                      className="border-cyan-200 bg-cyan-50 text-cyan-600"
+                    >
+                      Verified
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/leaderboard"
+              className="inline-flex items-center gap-1 text-sm font-medium text-cyan-600 transition-colors hover:text-cyan-800 cursor-pointer"
+            >
+              View Full Leaderboard
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {/* Category cards */}
+          <div className="mt-16">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading text-xl font-bold text-cyan-950">
+                Browse by Category
+              </h3>
+              <Link
+                href="/categories"
+                className="inline-flex items-center gap-1 text-sm font-medium text-cyan-600 transition-colors hover:text-cyan-800 cursor-pointer"
+              >
+                View All
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {featuredCategories.map((cat) => {
+                const count = leaderboardData.filter(
+                  (e) => e.category === cat.slug
+                ).length;
+                return (
+                  <Link
+                    key={cat.slug}
+                    href={`/categories/${cat.slug}`}
+                    className="group rounded-xl border border-cyan-100 bg-white/80 backdrop-blur-sm px-4 py-3 transition-all duration-200 hover:shadow-md hover:border-cyan-200 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-cyan-900 group-hover:text-cyan-700 transition-colors">
+                        {cat.label}
+                      </span>
+                      <span className="text-xs text-cyan-500">
+                        {count} {count === 1 ? "company" : "companies"}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -101,7 +251,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 sm:py-28">
+      <section id="how-it-works" className="scroll-mt-24 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center">
             <h2 className="font-heading text-3xl font-bold text-cyan-950 sm:text-4xl">
@@ -164,7 +314,7 @@ export default function Home() {
       {/* Features */}
       <section
         id="features"
-        className="border-y border-cyan-100 bg-gradient-to-b from-cyan-50/50 to-white py-20 sm:py-28"
+        className="scroll-mt-24 border-y border-cyan-100 bg-gradient-to-b from-cyan-50/50 to-white py-20 sm:py-28"
       >
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center">
@@ -225,81 +375,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Leaderboard Preview */}
-      <section className="py-20 sm:py-28">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="text-center">
-            <h2 className="font-heading text-3xl font-bold text-cyan-950 sm:text-4xl">
-              The Giving Leaderboard
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-cyan-700">
-              Ranked by verified giving percentage. The great equalizer.
-            </p>
-          </div>
-
-          <div className="mt-12 overflow-hidden rounded-2xl border border-cyan-200 bg-white/80 backdrop-blur-sm shadow-sm">
-            <div className="grid grid-cols-[3rem_1fr_5rem_6rem] gap-x-4 border-b border-cyan-100 bg-cyan-50/60 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-cyan-600 sm:grid-cols-[3rem_1fr_6rem_7rem_7rem]">
-              <span>#</span>
-              <span>Company</span>
-              <span className="text-right">MRG %</span>
-              <span className="hidden text-right sm:block">Given/mo</span>
-              <span className="text-right">Status</span>
-            </div>
-            {topFive.map((entry) => (
-              <div
-                key={entry.rank}
-                className="grid grid-cols-[3rem_1fr_5rem_6rem] items-center gap-x-4 border-b border-cyan-50 px-6 py-4 transition-colors duration-150 hover:bg-cyan-50/40 sm:grid-cols-[3rem_1fr_6rem_7rem_7rem]"
-              >
-                <span
-                  className={`font-heading text-lg font-bold ${
-                    entry.rank <= 3 ? "text-orange-500" : "text-cyan-400"
-                  }`}
-                >
-                  {entry.rank}
-                </span>
-                <span className="truncate font-medium text-cyan-900">
-                  {entry.company}
-                </span>
-                <span className="text-right font-heading font-bold text-cyan-900">
-                  {entry.givingPct}%
-                </span>
-                <span className="hidden text-right text-sm text-cyan-600 sm:block">
-                  ${(entry.amountCents / 100).toLocaleString()}
-                </span>
-                <div className="flex justify-end">
-                  {entry.is10PctClub ? (
-                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200">
-                      10% Club
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="border-cyan-200 bg-cyan-50 text-cyan-600"
-                    >
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link
-              href="/leaderboard"
-              className="inline-flex items-center gap-1 text-sm font-medium text-cyan-600 transition-colors hover:text-cyan-800 cursor-pointer"
-            >
-              View Full Leaderboard
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing */}
       <section
         id="pricing"
-        className="border-y border-cyan-100 bg-gradient-to-b from-cyan-50/50 to-white py-20 sm:py-28"
+        className="scroll-mt-24 border-y border-cyan-100 bg-gradient-to-b from-cyan-50/50 to-white py-20 sm:py-28"
       >
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center">
@@ -307,7 +386,7 @@ export default function Home() {
               Simple, Transparent Pricing
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-cyan-700">
-              2% of your verified MRR. Free under $1K/mo. Capped at $99/mo.
+              0.29% of your verified MRR. Capped at $29/mo. Free under $1K.
             </p>
           </div>
 

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
+    },
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/givecheck/javascript-nextjs"
+    }
+  }
+}

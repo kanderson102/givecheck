@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
+
+// Validate env vars at startup — fails fast if anything critical is missing
+import "@/lib/env";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",
@@ -30,7 +34,9 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${dmSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
     </html>
   );
 }
