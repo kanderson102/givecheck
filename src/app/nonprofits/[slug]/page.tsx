@@ -10,15 +10,10 @@ import {
   Globe,
   ExternalLink,
   Heart,
-  Calendar,
   Users,
   Target,
 } from "lucide-react";
-import {
-  nonprofitDetails,
-  leaderboardData,
-  nonprofitNameToSlug,
-} from "@/lib/mock-data";
+import { nonprofitDetails, leaderboardData } from "@/lib/mock-data";
 import { FollowButton } from "@/components/follow-button";
 import { DonationPieChart } from "@/components/donation-pie-chart";
 

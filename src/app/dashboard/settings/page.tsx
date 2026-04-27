@@ -228,9 +228,9 @@ export default function DashboardSettingsPage() {
                 <p className="font-medium text-cyan-700">To create a new key:</p>
                 <ol className="list-decimal list-inside space-y-1 leading-relaxed">
                   <li>Stripe Dashboard → Developers → API Keys</li>
-                  <li>Create restricted key → "Providing to a third-party app"</li>
+                  <li>Create restricted key → &quot;Providing to a third-party app&quot;</li>
                   <li>Name: GiveCheck · URL: https://givecheck.org</li>
-                  <li>Check "Customize permissions" → Balance → Read only</li>
+                  <li>Check &quot;Customize permissions&quot; → Balance → Read only</li>
                   <li>Copy and paste below</li>
                 </ol>
                 <a

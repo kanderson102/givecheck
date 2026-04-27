@@ -49,4 +49,6 @@ next-env.d.ts
 
 # IDE / tool configs
 .cursor/
-.agents/
+.claude/
+
+# Keep shared project agent skills versioned under .agents/.

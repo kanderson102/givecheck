@@ -4,7 +4,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Building2, TrendingUp, DollarSign, ShieldCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { founders, leaderboardData, nonprofitNameToSlug } from "@/lib/mock-data";
 import { FollowButton } from "@/components/follow-button";
 import { DonationPieChart } from "@/components/donation-pie-chart";

@@ -19,8 +19,6 @@ export const metadata = {
 };
 
 export default function BadgePage() {
-  const embedCode = `<div id="givecheck-badge" data-slug="your-company"></div>\n<script src="https://givecheck.com/api/badge/script.js" async></script>`;
-
   return (
     <>
       <Navbar />

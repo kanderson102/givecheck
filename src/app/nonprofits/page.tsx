@@ -158,7 +158,7 @@ export default function NonprofitsPage() {
           {/* Bottom CTA */}
           <div className="mt-16 text-center">
             <h2 className="font-heading text-2xl font-bold text-cyan-950 sm:text-3xl">
-              Can't find your nonprofit?
+              Can&apos;t find your nonprofit?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-cyan-700">
               Every.org has over 1.2M organizations. Full search will be
