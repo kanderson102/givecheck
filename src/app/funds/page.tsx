@@ -100,7 +100,7 @@ export default function FundsPage() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-cyan-700 sm:text-xl">
-              Don't know where to give? Choose a curated fund and let us
+              Don&apos;t know where to give? Choose a curated fund and let us
               distribute your donation across vetted nonprofits in that cause.
             </p>
           </div>
