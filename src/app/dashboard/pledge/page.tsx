@@ -19,10 +19,12 @@ export default function PledgePage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [currentPct, setCurrentPct] = useState<number | null>(null);
-  const [currentMrr, setCurrentMrr] = useState<number | null>(null);
+  const [currentPledgedDollars, setCurrentPledgedDollars] = useState<number | null>(null);
+  const [currentMrrCents, setCurrentMrrCents] = useState<number | null>(null);
   const [hasOpenPeriod, setHasOpenPeriod] = useState(false);
   const [periodEndDate, setPeriodEndDate] = useState<string | null>(null);
   const [nextPct, setNextPct] = useState<number | null>(null);
+  const [nextPledgedDollars, setNextPledgedDollars] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Fetch current pledge state + MRR
@@ -34,7 +36,13 @@ export default function PledgePage() {
         if (company) {
           const pct = company.mrgPledgePct ? Number(company.mrgPledgePct) : null;
           setCurrentPct(pct);
+          setCurrentPledgedDollars(
+            company.pledgedMonthlyCents ? company.pledgedMonthlyCents / 100 : null
+          );
           setNextPct(company.nextMrgPledgePct ? Number(company.nextMrgPledgePct) : null);
+          setNextPledgedDollars(
+            company.nextPledgedMonthlyCents ? company.nextPledgedMonthlyCents / 100 : null
+          );
 
           if (company.periodAnchor) {
             const anchor = new Date(company.periodAnchor);
@@ -53,8 +61,8 @@ export default function PledgePage() {
               const revRes = await fetch("/api/dashboard/revenue");
               if (revRes.ok) {
                 const revData = await revRes.json();
-                if (revData.currentMrr !== undefined) {
-                  setCurrentMrr(revData.currentMrr);
+                if (revData.currentMrrCents !== undefined) {
+                  setCurrentMrrCents(revData.currentMrrCents);
                 }
               }
             } catch {
@@ -69,28 +77,52 @@ export default function PledgePage() {
     load();
   }, []);
 
+  const currentMrrDollars =
+    currentMrrCents !== null ? currentMrrCents / 100 : null;
+
   // Compute effective percentage from either input mode
   const computedPct = (() => {
     if (inputMode === "percent") {
       return parseFloat(pledgePct);
     }
     const dollars = parseFloat(dollarAmount);
-    if (!dollars || !currentMrr || currentMrr <= 0) return NaN;
-    return Math.round((dollars / currentMrr) * 10000) / 100; // round to 2 decimals
+    if (!dollars || !currentMrrDollars || currentMrrDollars <= 0) return NaN;
+    return Math.round((dollars / currentMrrDollars) * 10000) / 100; // round to 2 decimals
   })();
 
   const computedDollars = (() => {
     if (inputMode === "dollar") return parseFloat(dollarAmount);
     const pct = parseFloat(pledgePct);
-    if (!pct || !currentMrr) return NaN;
-    return Math.round(pct / 100 * currentMrr * 100) / 100;
+    if (!pct || !currentMrrDollars) return NaN;
+    return Math.round((pct / 100) * currentMrrDollars * 100) / 100;
   })();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const pct = computedPct;
-    if (!pct || pct < 0.1 || pct > 100) {
-      setMessage({ type: "error", text: "Please enter a percentage between 0.1 and 100." });
+
+    // Authoritative value is dollars — compute from whichever input mode
+    const dollars = computedDollars;
+    if (!dollars || isNaN(dollars) || dollars <= 0) {
+      setMessage({
+        type: "error",
+        text: inputMode === "dollar"
+          ? "Please enter a monthly donation amount."
+          : "Connect Stripe so we can convert % to a dollar amount.",
+      });
+      return;
+    }
+    if (dollars < 10) {
+      setMessage({
+        type: "error",
+        text: "Pledge must be at least $10/month (Every.org minimum for recurring donations).",
+      });
+      return;
+    }
+    if (!Number.isInteger(dollars)) {
+      setMessage({
+        type: "error",
+        text: "Pledge must be a whole-dollar amount (Every.org requirement).",
+      });
       return;
     }
 
@@ -101,19 +133,19 @@ export default function PledgePage() {
       const res = await fetch("/api/dashboard/pledge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pledgePct: pct }),
+        body: JSON.stringify({ pledgedMonthlyCents: Math.round(dollars * 100) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to set pledge.");
 
+      const pctLabel = data.derivedPct ? ` (~${data.derivedPct}% of MRR)` : "";
       setMessage({
         type: "success",
         text: data.queued
           ? data.message
-          : data.message ?? `Pledge set to ${pct}%! Redirecting to allocations…`,
+          : data.message ?? `Pledge set to $${dollars}/mo${pctLabel}! Redirecting to allocations…`,
       });
 
-      // Redirect to allocations page to choose where giving goes
       setTimeout(() => router.push("/dashboard/allocations"), 1500);
     } catch (e) {
       setMessage({ type: "error", text: e instanceof Error ? e.message : "Something went wrong." });
@@ -154,17 +186,30 @@ export default function PledgePage() {
             </CardHeader>
             <CardContent className="space-y-5">
               {/* Current pledge status */}
-              {currentPct !== null && (
+              {(currentPledgedDollars !== null || currentPct !== null) && (
                 <div className="rounded-lg border border-cyan-200 bg-cyan-50/80 p-4 space-y-1">
                   <p className="text-sm font-medium text-cyan-800">
-                    Current pledge: <strong>{currentPct}%</strong>
+                    Current pledge:{" "}
+                    <strong>
+                      {currentPledgedDollars !== null
+                        ? `$${currentPledgedDollars}/mo`
+                        : "—"}
+                    </strong>
+                    {currentPct !== null && (
+                      <span className="text-cyan-600"> (≈{currentPct}% of MRR)</span>
+                    )}
                   </p>
                   {hasOpenPeriod && periodEndDate && (
                     <p className="text-xs text-cyan-600">
                       Active period ends {periodEndDate}
                     </p>
                   )}
-                  {nextPct !== null && (
+                  {nextPledgedDollars !== null && (
+                    <p className="text-xs text-amber-700">
+                      Queued change: decreasing to ${nextPledgedDollars}/mo next period
+                    </p>
+                  )}
+                  {nextPledgedDollars === null && nextPct !== null && (
                     <p className="text-xs text-amber-700">
                       Queued change: decreasing to {nextPct}% next period
                     </p>
@@ -208,11 +253,11 @@ export default function PledgePage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (currentMrr && currentMrr > 0) {
+                    if (currentMrrDollars && currentMrrDollars > 0) {
                       setInputMode("dollar");
                     }
                   }}
-                  disabled={!currentMrr || currentMrr <= 0}
+                  disabled={!currentMrrDollars || currentMrrDollars <= 0}
                   className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
                     inputMode === "dollar"
                       ? "bg-cyan-600 text-white"
@@ -223,7 +268,7 @@ export default function PledgePage() {
                   Set by $
                 </button>
               </div>
-              {(!currentMrr || currentMrr <= 0) && (
+              {(!currentMrrDollars || currentMrrDollars <= 0) && (
                 <p className="text-xs text-cyan-400">
                   Dollar-based pledges require revenue data from Stripe.
                 </p>
@@ -252,9 +297,9 @@ export default function PledgePage() {
                       </span>
                     </div>
                     {/* Show dollar equivalent */}
-                    {!isNaN(computedDollars) && computedDollars > 0 && currentMrr !== null && (
+                    {!isNaN(computedDollars) && computedDollars > 0 && currentMrrDollars !== null && (
                       <p className="mt-1.5 text-xs text-cyan-500">
-                        Based on your ${currentMrr.toLocaleString()} net revenue, that&apos;s{" "}
+                        Based on your ${currentMrrDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })} net revenue, that&apos;s{" "}
                         <strong className="text-cyan-700">${computedDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })}/mo</strong> in giving.
                       </p>
                     )}
@@ -276,7 +321,7 @@ export default function PledgePage() {
                     <div className="relative">
                       <Input
                         type="number"
-                        min="1"
+                        min="10"
                         step="1"
                         placeholder="e.g. 500"
                         value={dollarAmount}
@@ -288,9 +333,9 @@ export default function PledgePage() {
                         $
                       </span>
                     </div>
-                    {!isNaN(computedPct) && computedPct > 0 && currentMrr !== null && (
+                    {!isNaN(computedPct) && computedPct > 0 && currentMrrDollars !== null && (
                       <p className="mt-1.5 text-xs text-cyan-500">
-                        That&apos;s <strong className="text-cyan-700">{computedPct}%</strong> of your ${currentMrr.toLocaleString()} net revenue.
+                        That&apos;s <strong className="text-cyan-700">{computedPct}%</strong> of your ${currentMrrDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })} net revenue.
                       </p>
                     )}
                     <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">

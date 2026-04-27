@@ -4,7 +4,8 @@
       "mcp__Claude_Preview__preview_start",
       "Read(//usr/local/bin/**)",
       "Bash(export PATH=\"/usr/local/bin:$PATH\")",
-      "Bash(chmod +x /Users/kyle/Documents/projects/givecheck-site/.claude/start-dev.sh)"
+      "Bash(chmod +x /Users/kyle/Documents/projects/givecheck-site/.claude/start-dev.sh)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

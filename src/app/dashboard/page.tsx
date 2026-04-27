@@ -25,7 +25,12 @@ import { dashboardStats } from "@/lib/mock-data";
 import { db } from "@/db";
 import { companies, verificationPeriods } from "@/db/schema";
 import { eq, and, count } from "drizzle-orm";
-import { fetchRolling30DayRevenue, fetchRevenueHistory } from "@/lib/stripe-revenue";
+import {
+  fetchRolling30DayRevenue,
+  fetchRevenueHistory,
+  persistRevenueSnapshot,
+  getLatestFreshSnapshot,
+} from "@/lib/stripe-revenue";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -62,15 +67,27 @@ export default async function DashboardPage() {
   // and the fetch functions call it internally, so we pass the stored value as-is.
   let rolling30Day = null;
   let revenueHistory = null;
-  if (hasStripe) {
+  if (hasStripe && company) {
     try {
       [rolling30Day, revenueHistory] = await Promise.all([
         fetchRolling30DayRevenue(
-          company!.stripeAccountId!,
-          company!.periodAnchor ?? undefined
+          company.stripeAccountId!,
+          company.periodAnchor ?? undefined
         ),
-        fetchRevenueHistory(company!.stripeAccountId!),
+        fetchRevenueHistory(company.stripeAccountId!),
       ]);
+
+      // Persist snapshot to DB (once per 6h per company) so the verification
+      // cron + public leaderboard have historical data to work with. Fire-and-forget
+      // — persistence failing shouldn't break the dashboard render.
+      try {
+        const fresh = await getLatestFreshSnapshot(company.id, 360);
+        if (!fresh && rolling30Day) {
+          await persistRevenueSnapshot(company.id, rolling30Day);
+        }
+      } catch (persistErr) {
+        console.error("Failed to persist revenue snapshot:", persistErr);
+      }
     } catch (err) {
       console.error("Failed to fetch Stripe revenue:", err);
     }
