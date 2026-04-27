@@ -21,10 +21,11 @@ These are the features that make GiveCheck actually work. Without these, there's
 - [x] Normalize unit convention: API returns `currentMrrCents` (integer cents); all callers divide by 100 for dollar display
 
 ### P0.2 — Every.org donation execution ✅
-- [x] Implement `POST /api/donations/process` — generates pre-filled Every.org URLs (one per allocation), computes dollar share from pledge % × MRR
+- [x] Implement `POST /api/donations/process` — generates pre-filled Every.org URLs (one per allocation), computes dollar share from fixed-dollar monthly pledge
 - [x] Returns intents with `amountCents`, `amountDollars`, `donationUrl`, `supportedForDirectDonation` flag
 - [x] Bucket funds flagged `supportedForDirectDonation: false` until admin flow is built
-- [ ] Wire Every.org Partner Webhooks to populate `donations` table with `every_org_id`, `amount_cents`, etc. (see P2.2, API key already in hand)
+- [x] Pass `partnerDonorId={companyId}` through Every.org URLs for webhook reconciliation
+- [x] Wire Every.org Partner Webhooks to populate `donations` table with `every_org_id`, `amount_cents`, etc.
 
 ### P0.3 — Wire payment processing on confirm page ✅
 - [x] Replaced disabled card form with per-allocation "Set up donation" buttons (opens Every.org in new tab)
@@ -32,17 +33,28 @@ These are the features that make GiveCheck actually work. Without these, there's
 - [x] Removed misleading "Payment processing coming soon" banner
 - [x] Bucket fund allocations show "Processed internally" pill with explanation
 
-### P0.4 — Verification loop (automated)
-- [ ] **Every.org Partner Webhook endpoint** — `POST /api/every-org/webhook` (docs: https://docs.every.org/docs/webhooks/partner-webhook)
+### P0.4 — Verification loop backend core ✅
+- [x] Fixed-dollar pledge model: store `pledgedMonthlyCents`, enforce $10 minimum, enforce whole dollars
+- [x] Lock `verification_periods.pledged_cents` at period start
+- [x] Track `mrrAtPledgeCents` and `mrrDriftFlag` for later dashboard drift messaging
+- [x] **Every.org Partner Webhook endpoint** — `POST /api/every-org/webhook` (docs: https://docs.every.org/docs/webhooks/partner-webhook)
   - Verify webhook signature
-  - On `donation.created` / `donation.confirmed`: insert row into `donations` table with `every_org_id`, `amount_cents`, `recipient_name`, period info
-  - Match incoming donation to a company by `partnerDonorId` (pass `companyId` on URL gen) or by recipient + email
+  - On `donation.created` / `donation.succeeded`: upsert row into `donations` table with `every_org_id`, `amount_cents`, `recipient_name`, period info
+  - Match incoming donation to a company by `partnerDonorId`
   - Idempotent on `every_org_id` to handle webhook retries
-- [ ] Cron (Vercel Cron on 1st of month): Stripe pull → MRG % calc → Every.org verify → update `leaderboard_cache`
-- [ ] Check donations vs `mrg_pledge_pct` for each company's open `verification_period`
-- [ ] Set `verification_periods.is_verified = true` when met, open new period
-- [ ] Apply queued `next_mrg_pledge_pct` at period rollover (decrease takes effect)
-- [ ] Set company `status = "lapsed"` if verification fails
+  - Handle `donation.refunded` and `subscription.cancelled`
+- [x] Daily Vercel Cron at noon ET: verify due periods and update `leaderboard_cache`
+- [x] Check donations vs locked `pledged_cents` for each due `verification_period`
+- [x] Set `verification_periods.is_verified = true` when met and open the next period
+- [x] Apply queued `next_pledged_monthly_cents` at period rollover
+- [x] Set company `status = "lapsed"` if verification fails after grace period
+
+### P0.4 — Verification rollout / QA
+- [ ] Confirm exact Every.org production webhook event names and signature header with real payloads
+- [ ] Set `EVERY_ORG_WEBHOOK_SECRET`, `CRON_SECRET`, and `CRON_ENABLED=true` in Vercel
+- [ ] Run manual webhook idempotency test from `docs/stories/p0.4-verification-loop.md`
+- [ ] Run manual cron verification/lapse test against a seeded verification period
+- [ ] Decide whether to alias `donation.confirmed` to the existing `donation.created` / `donation.succeeded` handler after seeing production payloads
 
 ### P0.5 — Wire leaderboard + profiles to real DB
 - [ ] Leaderboard page: query `companies` + `leaderboard_cache` instead of mock data

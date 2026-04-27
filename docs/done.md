@@ -4,6 +4,29 @@ All items moved here from `todos.md` once completed, with the date marked done.
 
 ---
 
+## 2026-04-27 — P0.4 Backend Core & Agent Baseline
+
+### P0.4 Verification Loop Backend
+- [x] Fixed-dollar pledge model implemented (`pledgedMonthlyCents`) with $10 minimum and whole-dollar validation
+- [x] Verification periods lock `pledgedCents` at period start
+- [x] MRR drift baseline fields added (`mrrAtPledgeCents`, `mrrDriftFlag`)
+- [x] Every.org donation links include `partnerDonorId={companyId}`
+- [x] `POST /api/every-org/webhook` verifies HMAC signatures and idempotently upserts donations by `every_org_id`
+- [x] Webhook handles donation success, refund, subscription cancellation, and unknown `partnerDonorId` ignore cases
+- [x] `src/lib/verification.ts` verifies due periods, lapses failed companies after grace, opens next periods, applies queued pledge decreases, and refreshes `leaderboard_cache`
+- [x] `GET /api/cron/daily` secured by `CRON_SECRET`
+- [x] `vercel.json` schedules daily cron at noon America/New_York
+
+### Agentic Dev Baseline
+- [x] `AGENTS.md` is the canonical project agent instruction file
+- [x] `CLAUDE.md` points to `AGENTS.md`
+- [x] `.claude/` removed from Git tracking and ignored as local tool state
+- [x] Shared project skills committed under `.agents/skills`
+- [x] ESLint config fixed for ESLint 9 / Next 15 compatibility
+- [x] `npm run lint` and `npm run build` pass
+
+---
+
 ## 2026-04-15 — Foundations, Infrastructure & Security Hardening
 
 ### Core Infrastructure
@@ -79,7 +102,7 @@ All items moved here from `todos.md` once completed, with the date marked done.
 **Authenticated:**
 - [x] `/onboarding` — 3-step flow (name/website → category/bio → Stripe key)
 - [x] `/dashboard` — Main dashboard with stats, pledge card, badge preview, revenue chart
-- [x] `/dashboard/pledge` — Change pledge % with queue logic
+- [x] `/dashboard/pledge` — Change fixed-dollar monthly pledge with queue logic for decreases
 - [x] `/dashboard/allocations` + `/dashboard/allocations/confirm` — Allocation setup with sum=100% enforcement
 - [x] `/dashboard/settings` — Company profile editor
 - [x] `/dashboard/following` — Follow list
@@ -137,7 +160,7 @@ All items moved here from `todos.md` once completed, with the date marked done.
 - [x] GitHub Actions workflow (`.github/workflows/vercel-deploy.yml`) — separate preview (PR) + production (main) jobs
 - [x] Vercel connected to GitHub
 - [x] `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secrets configured
-- [x] `.gitignore` covers `.env*` (with `!.env.example` exception), `.vercel/`, `.clerk/`, `.cursor/`, `.agents/`, `.env.sentry-build-plugin`
+- [x] `.gitignore` covers `.env*` (with `!.env.example` exception), `.vercel/`, `.clerk/`, `.cursor/`, `.claude/`, `.env.sentry-build-plugin`
 - [x] Initial production push to `main` completed (87 files, 23k+ lines)
 
 ### Documentation
