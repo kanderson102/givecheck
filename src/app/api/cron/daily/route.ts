@@ -11,7 +11,9 @@ import {
 /**
  * GET /api/cron/daily
  *
- * Runs at 12:00 America/New_York every day via Vercel Cron.
+ * Runs at 16:00 UTC every day via Vercel Cron.
+ * Vercel cron schedules are UTC-only, so this is noon ET during daylight time
+ * and 11:00 ET during standard time.
  * See vercel.json for the schedule. Secured by `Authorization: Bearer $CRON_SECRET`.
  *
  * Two phases:

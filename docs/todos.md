@@ -43,7 +43,7 @@ These are the features that make GiveCheck actually work. Without these, there's
   - Match incoming donation to a company by `partnerDonorId`
   - Idempotent on `every_org_id` to handle webhook retries
   - Handle `donation.refunded` and `subscription.cancelled`
-- [x] Daily Vercel Cron at noon ET: verify due periods and update `leaderboard_cache`
+- [x] Daily Vercel Cron at 16:00 UTC: verify due periods and update `leaderboard_cache`
 - [x] Check donations vs locked `pledged_cents` for each due `verification_period`
 - [x] Set `verification_periods.is_verified = true` when met and open the next period
 - [x] Apply queued `next_pledged_monthly_cents` at period rollover
