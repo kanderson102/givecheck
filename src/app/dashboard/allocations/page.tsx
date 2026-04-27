@@ -98,7 +98,7 @@ export default function AllocationsPage() {
   // ── State ──────────────────────────────────────────────────────
   const [allocations, setAllocations] = useState<AllocationEntry[]>([]);
   const [pledgePct, setPledgePct] = useState<number | null>(null);
-  const [currentMrr, setCurrentMrr] = useState<number | null>(null);
+  const [currentMrrCents, setCurrentMrrCents] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -148,8 +148,8 @@ export default function AllocationsPage() {
             const revRes = await fetch("/api/dashboard/revenue");
             if (revRes.ok) {
               const revData = await revRes.json();
-              if (revData.currentMrr !== undefined) {
-                setCurrentMrr(revData.currentMrr);
+              if (revData.currentMrrCents !== undefined) {
+                setCurrentMrrCents(revData.currentMrrCents);
               }
             }
           } catch {
@@ -165,8 +165,12 @@ export default function AllocationsPage() {
 
   // ── Computed values ────────────────────────────────────────────
   const totalAllocated = allocations.reduce((sum, a) => sum + a.allocationPct, 0);
+  const currentMrrDollars =
+    currentMrrCents !== null ? currentMrrCents / 100 : null;
   const totalGivingDollars =
-    pledgePct !== null && currentMrr !== null ? (pledgePct / 100) * currentMrr : null;
+    pledgePct !== null && currentMrrDollars !== null
+      ? (pledgePct / 100) * currentMrrDollars
+      : null;
   const isComplete = totalAllocated === 100;
 
   // ── Search handler ─────────────────────────────────────────────
@@ -286,7 +290,7 @@ export default function AllocationsPage() {
             )}
             {totalGivingDollars !== null && (
               <p className="text-sm text-cyan-600">
-                Based on your last 30 days: <strong>${currentMrr!.toLocaleString()}</strong> net
+                Based on your last 30 days: <strong>${currentMrrDollars!.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> net
                 revenue → <strong>${totalGivingDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })}/mo</strong> in giving
               </p>
             )}

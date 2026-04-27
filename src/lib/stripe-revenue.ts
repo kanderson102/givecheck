@@ -1,5 +1,8 @@
 import Stripe from "stripe";
 import { getStripeKey } from "@/lib/crypto";
+import { db } from "@/db";
+import { revenueSnapshots } from "@/db/schema";
+import { eq, desc, and, gte } from "drizzle-orm";
 
 export interface MonthlyRevenue {
   month: string;       // "Jan 2026"
@@ -173,4 +176,107 @@ export async function fetchRevenueHistory(
   const result: RevenueHistory = { history: months };
   historyCache.set(encryptedKey, { data: result, expiry: Date.now() + CACHE_TTL });
   return result;
+}
+
+/**
+ * Persists a rolling 30-day revenue snapshot to the database.
+ * Idempotent for the same period — if a snapshot already exists for the same
+ * company + periodEnd date, returns it without creating a duplicate.
+ */
+export async function persistRevenueSnapshot(
+  companyId: string,
+  revenue: Rolling30DayRevenue
+): Promise<{
+  id: string;
+  grossRevenueCents: number;
+  netRevenueCents: number | null;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: Date;
+}> {
+  const periodStartStr = revenue.windowStart.toISOString().slice(0, 10);
+  const periodEndStr = revenue.windowEnd.toISOString().slice(0, 10);
+
+  // Check if a snapshot already exists for this exact period end
+  const existing = await db
+    .select()
+    .from(revenueSnapshots)
+    .where(
+      and(
+        eq(revenueSnapshots.companyId, companyId),
+        eq(revenueSnapshots.periodEnd, periodEndStr)
+      )
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    return {
+      id: existing[0].id,
+      grossRevenueCents: existing[0].grossRevenueCents,
+      netRevenueCents: existing[0].netRevenueCents,
+      periodStart: existing[0].periodStart,
+      periodEnd: existing[0].periodEnd,
+      createdAt: existing[0].createdAt,
+    };
+  }
+
+  const [inserted] = await db
+    .insert(revenueSnapshots)
+    .values({
+      companyId,
+      periodStart: periodStartStr,
+      periodEnd: periodEndStr,
+      grossRevenueCents: revenue.grossRevenueCents,
+      netRevenueCents: revenue.netRevenueCents,
+      source: "stripe",
+      verified: false,
+    })
+    .returning({
+      id: revenueSnapshots.id,
+      grossRevenueCents: revenueSnapshots.grossRevenueCents,
+      netRevenueCents: revenueSnapshots.netRevenueCents,
+      periodStart: revenueSnapshots.periodStart,
+      periodEnd: revenueSnapshots.periodEnd,
+      createdAt: revenueSnapshots.createdAt,
+    });
+
+  return inserted;
+}
+
+/**
+ * Returns the latest stored snapshot for a company if it's fresh
+ * (younger than `maxAgeMinutes`). Otherwise returns null so callers
+ * know they should fetch live from Stripe.
+ */
+export async function getLatestFreshSnapshot(
+  companyId: string,
+  maxAgeMinutes: number = 360 // 6 hours default
+): Promise<{
+  grossRevenueCents: number;
+  netRevenueCents: number | null;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: Date;
+} | null> {
+  const threshold = new Date(Date.now() - maxAgeMinutes * 60 * 1000);
+
+  const [snapshot] = await db
+    .select({
+      grossRevenueCents: revenueSnapshots.grossRevenueCents,
+      netRevenueCents: revenueSnapshots.netRevenueCents,
+      periodStart: revenueSnapshots.periodStart,
+      periodEnd: revenueSnapshots.periodEnd,
+      createdAt: revenueSnapshots.createdAt,
+    })
+    .from(revenueSnapshots)
+    .where(
+      and(
+        eq(revenueSnapshots.companyId, companyId),
+        gte(revenueSnapshots.createdAt, threshold)
+      )
+    )
+    .orderBy(desc(revenueSnapshots.createdAt))
+    .limit(1);
+
+  return snapshot ?? null;
 }
