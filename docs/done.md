@@ -15,7 +15,7 @@ All items moved here from `todos.md` once completed, with the date marked done.
 - [x] Webhook handles donation success, refund, subscription cancellation, and unknown `partnerDonorId` ignore cases
 - [x] `src/lib/verification.ts` verifies due periods, lapses failed companies after grace, opens next periods, applies queued pledge decreases, and refreshes `leaderboard_cache`
 - [x] `GET /api/cron/daily` secured by `CRON_SECRET`
-- [x] `vercel.json` schedules daily cron at noon America/New_York
+- [x] `vercel.json` schedules daily cron at 16:00 UTC
 
 ### Agentic Dev Baseline
 - [x] `AGENTS.md` is the canonical project agent instruction file
