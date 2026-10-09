@@ -74,7 +74,7 @@ function snapMrr(mrr: number): number {
 }
 
 export function PricingSlider() {
-  const [mrr, setMrr] = useState(5000);
+  const [mrr, setMrr] = useState(1000);
   const fee = computeFee(mrr);
   const isFree = mrr < FREE_THRESHOLD;
   const isEnterprise = mrr >= 50000;
