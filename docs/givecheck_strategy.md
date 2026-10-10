@@ -67,7 +67,7 @@ Two tiers:
 
 There are two distinct badge contexts with different display rules:
 
-**On-site variant** (used on givecheck.com examples, embeddable badges on company websites):
+**On-site variant** (used on givecheck.org examples, embeddable badges on company websites):
 - Always spells out "X% Monthly Recurring Giving" — never uses the abbreviation "MRG" since cold visitors don't know the term
 - Embeddable badges additionally show competitive ranking: "#{rank} on GiveCheck in {Category}"
 - This Product Hunt-style ranking creates status incentive for founders to embed the badge on their sites
