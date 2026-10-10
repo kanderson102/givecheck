@@ -49,6 +49,7 @@ Post launch we'll continue to build relationships with larger companies and infl
 - Customer stories that you can share on your website and social media
 - Community with the most generous companies (Slack or Discord) to share insights and opportunities
 - Newsletter filled with opportunities
+- Priority listing on job board with Hack the Commons with visible badges
 - 10% Club highlighting
     - Monthly group video calls with other founders to connect and share insights and opportunities
     - Free access to GiveCheck's annual hackathon
